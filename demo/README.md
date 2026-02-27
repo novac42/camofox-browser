@@ -9,6 +9,9 @@ Minimal demo script that drives `camofox-browser` over HTTP:
 3. `GET /tabs/:tabId/snapshot`
 4. `DELETE /tabs/:tabId` (default)
 
+Before running the search, it waits a randomized warmup delay (`4000-8000ms` by default)
+to reduce bot-like request timing.
+
 ### Run
 
 ```bash
@@ -23,5 +26,7 @@ node demo/codex-camofox-demo.js \
   --user-id agent1 \
   --session-key demo1 \
   --query "openai gpt-5" \
+  --warmup-min-ms 4000 \
+  --warmup-max-ms 8000 \
   --keep-open
 ```

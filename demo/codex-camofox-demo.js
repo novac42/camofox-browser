@@ -7,6 +7,8 @@ function parseArgs(argv) {
     sessionKey: 'demo1',
     query: 'weather today',
     keepOpen: false,
+    warmupMinMs: 4000,
+    warmupMaxMs: 8000,
   };
 
   for (let i = 0; i < argv.length; i++) {
@@ -16,9 +18,24 @@ function parseArgs(argv) {
     else if (arg === '--session-key' && argv[i + 1]) options.sessionKey = argv[++i];
     else if (arg === '--query' && argv[i + 1]) options.query = argv[++i];
     else if (arg === '--keep-open') options.keepOpen = true;
+    else if (arg === '--warmup-min-ms' && argv[i + 1]) options.warmupMinMs = Number(argv[++i]);
+    else if (arg === '--warmup-max-ms' && argv[i + 1]) options.warmupMaxMs = Number(argv[++i]);
   }
 
   return options;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function pickDelayMs(minMs, maxMs, randomFn = Math.random) {
+  if (!Number.isFinite(minMs) || minMs < 0) throw new Error('warmupMinMs must be a non-negative number');
+  if (!Number.isFinite(maxMs) || maxMs < 0) throw new Error('warmupMaxMs must be a non-negative number');
+  if (maxMs < minMs) throw new Error('warmupMaxMs must be greater than or equal to warmupMinMs');
+  if (maxMs === minMs) return Math.floor(minMs);
+  const span = maxMs - minMs;
+  return Math.floor(minMs + randomFn() * span);
 }
 
 async function requestJson(fetchImpl, url, options = {}) {
@@ -38,6 +55,10 @@ async function runDemo({
   sessionKey = 'demo1',
   query = 'weather today',
   keepOpen = false,
+  warmupMinMs = 4000,
+  warmupMaxMs = 8000,
+  sleepFn = sleep,
+  randomFn = Math.random,
 } = {}) {
   if (typeof fetchImpl !== 'function') {
     throw new Error('fetch is not available. Use Node.js 18+ or pass fetchImpl.');
@@ -54,6 +75,10 @@ async function runDemo({
   });
 
   const tabId = createData.tabId;
+  const warmupDelayMs = pickDelayMs(warmupMinMs, warmupMaxMs, randomFn);
+  if (warmupDelayMs > 0) {
+    await sleepFn(warmupDelayMs);
+  }
 
   await requestJson(fetchImpl, `${baseUrl}/tabs/${tabId}/navigate`, {
     method: 'POST',
@@ -102,4 +127,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { parseArgs, runDemo };
+module.exports = { parseArgs, runDemo, pickDelayMs };

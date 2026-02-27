@@ -1,4 +1,4 @@
-const { runDemo } = require('../../demo/codex-camofox-demo');
+const { runDemo, pickDelayMs } = require('../../demo/codex-camofox-demo');
 
 describe('demo camofox script', () => {
   test('runs the basic workflow and closes the tab by default', async () => {
@@ -26,6 +26,10 @@ describe('demo camofox script', () => {
       userId: 'agent1',
       sessionKey: 'task1',
       query: 'weather today',
+      warmupMinMs: 4000,
+      warmupMaxMs: 8000,
+      randomFn: () => 0.5,
+      sleepFn: async () => {},
     });
 
     expect(result.tabId).toBe('t1');
@@ -35,5 +39,11 @@ describe('demo camofox script', () => {
     expect(calls[1].url).toBe('http://localhost:9377/tabs/t1/navigate');
     expect(calls[2].url).toBe('http://localhost:9377/tabs/t1/snapshot?userId=agent1');
     expect(calls[3].url).toBe('http://localhost:9377/tabs/t1?userId=agent1');
+  });
+
+  test('uses randomized warmup delay in range', () => {
+    expect(pickDelayMs(4000, 8000, () => 0)).toBe(4000);
+    expect(pickDelayMs(4000, 8000, () => 0.99999)).toBeLessThan(8000);
+    expect(pickDelayMs(4000, 8000, () => 0.99999)).toBeGreaterThanOrEqual(4000);
   });
 });
