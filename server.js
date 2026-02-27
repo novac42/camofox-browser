@@ -380,10 +380,10 @@ async function launchBrowserInstance() {
   const hostOS = getHostOS();
   const proxy = buildProxyConfig();
   
-  log('info', 'launching camoufox', { hostOS, geoip: !!proxy });
+  log('info', 'launching camoufox', { hostOS, geoip: !!proxy, headless: CONFIG.headless });
   
   const options = await launchOptions({
-    headless: true,
+    headless: CONFIG.headless,
     os: hostOS,
     humanize: true,
     enable_cache: true,
